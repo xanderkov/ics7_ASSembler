@@ -5,23 +5,34 @@
 ;значению следующей за ним цифры.
 
 
-EXTRN output_X: near
+EXTRN move_three: near
 
-STK SEGMENT PARA STACK 'STACK'
-	db 100 dup(0)
-STK ENDS
+STACKSEG SEGMENT PARA STACK 'STACK'
+    DB 10h DUP(0)
+STACKSEG ENDS
+
+SEGDATA SEGMENT PARA COMMON 'DATA'
+	DB 	10
+SEGDATA ENDS
 
 CSEG SEGMENT PARA PUBLIC 'CODE'
-	assume CS:CSEG, DS:DSEG, SS:STK
+	assume CS:CSEG, DS:SEGDATA, SS:STACKSEG
 main:
-	mov ax, DSEG
-	mov ds, ax
+	mov 	ax, SEGDATA
+	mov 	ds, ax
 
-	call output_X	
-
-	mov ax, 4c00h
-	int 21h
+	mov		ah, 0Ah
+	mov		dx, 0
+	int 	21h
+	mov 	ds:10, '$'
+	call 	move_three	
+	mov		dx, 0
+	mov		ah, 9
+	int 	21h
+	mov AH, 7
+    INT 21h
+	mov 	ax, 4c00h
+	int 	21h
 CSEG ENDS
-
 
 END main
