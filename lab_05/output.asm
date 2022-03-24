@@ -31,6 +31,7 @@ print_matrix proc near
     OUTMAT:
         MOV CL, M 
         OUTROW:
+            ADD MATRIX[BX], "0"
             MOV DL, MATRIX[BX]
             MOV AH, 2
             INT 21H

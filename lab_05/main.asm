@@ -2,7 +2,6 @@
 ; удваинвание четных элементов и утраивание нечентных.
 ; Вывести только последние цифры новых значений
 
-
 PUBLIC N
 PUBLIC M
 PUBLIC MATRIX
@@ -29,12 +28,6 @@ CSEG SEGMENT PARA PUBLIC 'CODE'
 	assume CS:CSEG, DS:SEGDATA, SS:STACKSEG
 
 
-multiply_even:
-
-    ja go_back
-multiply_odd:
-    
-    ja go_back
 main:
     MOV AX, SEGDATA
     MOV DS, AX
@@ -82,11 +75,15 @@ main:
 
     MOV BX, 0
     MOV CL, N
+    
     INMAT:
         MOV CL, M 
         INROW:
             MOV AH, 1
             INT 21H
+            SUB AL, "0"
+            CMP AL, 10
+            JA  print_error
             MOV MATRIX[BX], AL
             INC BX 
             CALL PRINT_SPACE
@@ -107,27 +104,46 @@ main:
     CHANGEMAT:
         MOV CL, M 
         CHANGEROW:
-            mov ax, MATRIX[BX]
-
-            mov bl, 2
-            div bl
-
-            cmp ah, 0
-            je multiply_even
-            cmp ah, 1
-            je multiply_odd
-
+            SUB MATRIX[BX], "0"
+            mov al, MATRIX[BX]
+            mov ah, 00
+            mov dh, 02h
+            div dh
+            
+            cmp ah, 01
+                JE multiply_odd
+            cmp ah, 00
+                JE multiply_even
+            
             go_back:
-            INC BX 
+            INC bx 
             LOOP CHANGEROW
-        CALL newline
         MOV CL, N 
-        SUB CX, SI 
-        INC si 
+        SUB CX, si 
+        INC si
         LOOP CHANGEMAT
-
+    
+    call newline
+    call print_matrix
     jmp end_programm
 
+
+multiply_even:
+    mov al, MATRIX[BX]
+    mov dh, 2
+    mul dh
+    mov dh, 10
+    div dh
+    mov MATRIX[BX], ah
+    jmp go_back
+multiply_odd:
+    mov al, MATRIX[BX]
+    mov dh, 3
+    mul dh
+    mov dh, 10
+    div dh
+    mov MATRIX[BX], ah
+    jmp go_back
 print_error:
     call newline
     mov ah, 09h
