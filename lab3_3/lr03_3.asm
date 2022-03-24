@@ -33,14 +33,14 @@ assume DS:SD2
 	mov ds, ax
 	mov dl, S2
 	call output
-assume DS:SD3
+;assume DS:SD3
 	mov ax, SD3
 	mov ds, ax
-	mov dl, S3
+	mov dl, ds:S3
 	call output
 	
-	mov ax, 4c00h
-	int 21h
+	;mov ax, 4c00h
+	;int 21h
 CSEG ENDS
 END main
 

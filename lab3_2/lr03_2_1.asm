@@ -3,6 +3,6 @@ STK SEGMENT para STACK 'STACK'
 STK ENDS
 
 SD1 SEGMENT para common 'DATA'
-	W dw 3444h
+	W db 34h, 44h
 SD1 ENDS
 END

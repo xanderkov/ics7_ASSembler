@@ -12,7 +12,8 @@ STACKSEG SEGMENT PARA STACK 'STACK'
 STACKSEG ENDS
 
 SEGDATA SEGMENT PARA COMMON 'DATA'
-	DB 	10
+	input DB 	10, 0
+	output db 10 DUP('$')
 SEGDATA ENDS
 
 CSEG SEGMENT PARA PUBLIC 'CODE'
@@ -22,12 +23,8 @@ main:
 	mov 	ds, ax
 
 	mov		ah, 0Ah
-	mov		dx, 0
+	mov		dx, offset input
 	int 	21h
-	mov		bx, dx
-	mov		cl, [bx]+1
-	mov 	dh, '$'
-	mov 	ds:10, dh
 	call 	move_three	
 	mov		dx, 0
 	mov		ah, 9
