@@ -24,13 +24,16 @@ main:
 	mov		ah, 0Ah
 	mov		dx, 0
 	int 	21h
-	mov 	ds:10, '$'
+	mov		bx, dx
+	mov		cl, [bx]+1
+	mov 	dh, '$'
+	mov 	ds:10, dh
 	call 	move_three	
 	mov		dx, 0
 	mov		ah, 9
 	int 	21h
-	mov AH, 7
-    INT 21h
+	mov 	AH, 7
+    INT 	21h
 	mov 	ax, 4c00h
 	int 	21h
 CSEG ENDS
