@@ -45,8 +45,9 @@ main:
 
     SUB AL, "0"
     CMP AL, 10
-
     JA  print_error
+    CMP AL, 0
+    JLE print_error
 
     CALL print_space
 
@@ -58,7 +59,8 @@ main:
     SUB AL, "0"
     CMP AL, 10
     JA  print_error
-
+    CMP AL, 0
+    JLE print_error
     call newline
     ; Вывод пригашения о вводе матрицы
     MOV AH, 9
@@ -85,13 +87,18 @@ main:
             CMP AL, 10
             JA  print_error
             MOV MATRIX[BX], AL
-            INC BX 
+            INC BX
             CALL PRINT_SPACE
             LOOP INROW
         CALL newline
+        MOV AL, 10
+        MOV AH, 00
+        SUB AL, N
+        ADD AX, BX
+        MOV BX, AX
         MOV CL, N 
         SUB CX, SI 
-        INC si 
+        INC si
         LOOP INMAT
 
     call newline
@@ -118,6 +125,10 @@ main:
             go_back:
             INC bx 
             LOOP CHANGEROW
+        MOV AL, 10
+        MOV AH, 00
+        SUB AL, N
+        ADD BX, AX
         MOV CL, N 
         SUB CX, si 
         INC si

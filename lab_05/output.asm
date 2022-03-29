@@ -39,6 +39,11 @@ print_matrix proc near
             CALL PRINT_SPACE
             LOOP OUTROW
         CALL newline
+        MOV AL, 10
+        MOV AH, 00
+        SUB AL, N
+        ADD AX, BX
+        MOV BX, AX
         MOV CL, N 
         SUB CX, SI 
         INC si 
