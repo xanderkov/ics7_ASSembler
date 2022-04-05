@@ -53,8 +53,6 @@ OUTSBIN PROC NEAR
 
     CALL TOUBIN
 
-    
-
     MOV AH, 9
     MOV DX, OFFSET UBIN
     INT 21H
