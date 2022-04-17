@@ -1,90 +1,115 @@
 .MODEL TINY
 .CODE
 .186
+ORG 100H
 
-ORG 100H  
+main:
+    JMP init
 
-MAIN:
-    JMP INIT
+    SPEED DB 00011111b
+    CURR_HANDLER DD ?
+    IS_WORK DB 0
+    SECONDS DB 0
 
-    CURRENT DB 0
-    IS_INIT DB 'y'
-    SPEED DB 01FH
-    OLD_BREAKING DD ?
+init PROC
+    ; Сохранить адрес предыдущего обработчика прерывания 1Ch
+    MOV AX, 351ch
+    INT 21h
 
-MY_BREAKING:
-    PUSHA           ;сохраняет в стеке содержимое восьми 16-битных регистров общего назначения
-    PUSH ES
-    PUSH DS
+    ; WORD PTR нужно интерпретировать, как операнд размером в слово
+    MOV WORD PTR CURR_HANDLER, BX
+    MOV WORD PTR CURR_HANDLER + 2, ES ; (возвращается в ES:BX)
 
-    MOV AH, 02H    
-    INT 1AH
+    CMP ES:IS_WORK, 1
 
-    CMP DH, CURRENT
-    MOV CURRENT, DH
-    JE END_LOOP
+    ; если ==, то turn_off, иначе turn_on
+    JE turn_off
 
-    MOV AL, 0F3H
-    OUT 60H, AL     ;инструкция OUT выводит данные из регистра AL или AX в порт ввода-вывода
-    MOV AL, SPEED
-    OUT 60H, AL
+turn_on:
+    XOR IS_WORK, 1
 
-    dec SPEED
+    ; Установить наш обработчик
+    MOV AX, 251ch
+    MOV DX, offset autorepeat_handler
+    INT 21h
 
-    TEST SPEED, 01FH
-    JZ RESET_SPEED
-    JMP END_LOOP
+    MOV DX, offset init
+    ; Возвращает управление DOS, оставляя часть памяти распределенной, 
+    ; так что последующие программы не будут перекрывать программный 
+    ; код или данные в этой памяти.
+    INT 27h
 
-    RESET_SPEED:
-        MOV SPEED, 01FH
+turn_off:
+    XOR IS_WORK, 1
+    ; Восстановить предыдущий обработчик прерывания 1Ch.
+    MOV AX, 251ch
+    MOV DX, WORD PTR ES:CURR_HANDLER
+    MOV DS, WORD PTR ES:CURR_HANDLER + 2
 
-    END_LOOP:
-        POP DS
-        POP ES
-        POPA
+    INT 21h
 
-        JMP CS:OLD_BREAKING
+    ; команда F3h отвечает за параметры режима автоповтора нажатой клавиши
+    MOV AL, 0f3h
+    ; Копирует число из источника (AL, АХ или ЕАХ) в порт ввода-вывода
+    ; Порт 60h доступен для записи и обычно принимает пары байтов 
+    ; последовательно: первый - код команды, второй - данные
+    OUT 60h, AL
 
-INIT:    
-    MOV AX, 3508H                        ;AH = 35H, AL = номер прерывания
-    INT 21H                           
+    MOV AL, 0h
+    OUT 60h, AL
 
-    CMP ES:IS_INIT, 'y'
-    JE EXIT
+    ; завершение программы
+    MOV AH, 4ch
+    INT 21h
 
-    MOV WORD PTR OLD_BREAKING, BX        ;Запоминаем адрес старого обработчика
-    MOV WORD PTR OLD_BREAKING + 2, ES    ;Зпоминаем адрес ES
+init endp
 
-    MOV AX, 2508H                      
-    MOV DX, OFFSET MY_BREAKING           ;Устанавливаем своего обработчика 08 вместо обработчика по умолчанию
-    INT 21H                             
-
-    MOV DX, OFFSET INIT
-    INT 27H
-
-EXIT:
+autorepeat_handler PROC FAR
+    ; Поместить в стек значение регистра FLAGS
+    PUSHF
+    ; Поместить в стек значения всех 16-битных регистров общего назначения
     PUSHA
-    PUSH ES
-    PUSH DS
 
-    MOV AX, 2508H
-    MOV DX, WORD PTR ES:OLD_BREAKING
-    MOV DS, WORD PTR ES:OLD_BREAKING + 2
-    INT 21H
+    ; читать время из "постоянных" (CMOS) часов реального времени
+    ; выход: CH = часы в коде BCD   (пример: CX = 1243H = 12:43)
+    ;        CL = минуты в коде BCD
+    ;        DH = секунды в коде BCD
+    ; выход: CF = 1, если часы не работают
+    MOV AH, 02h
+    INT 1AH
+    
+    JC finish_autorepeat_handler ; ПЕРЕХОД, ЕСЛИ CF==1
 
-    MOV AL, 0F3H
-    OUT 60H, AL
-    MOV AL, 0
-    OUT 60H, AL
+    ; если секунды одинаковые, то сразу переходим к концу
+    CMP SECONDS, DH
+    JE finish_autorepeat_handler
 
-    POP DS
-    POP ES
+    MOV SECONDS, DH
+    DEC SPEED
+    
+    ; команда F3h отвечает за параметры режима автоповтора нажатой клавиши
+    MOV AL, 0f3h
+    ; Копирует число из источника (AL, АХ или ЕАХ) в порт ввода-вывода
+    ; Порт 60h доступен для записи и обычно принимает пары байтов 
+    ; последовательно: первый - код команды, второй - данные
+    OUT 60h, AL
+
+    MOV AL, SPEED
+    OUT 60h, AL
+
+    CMP SPEED, 0h
+    JNE finish_autorepeat_handler
+
+    MOV SPEED, 00011111b ; 2 cимвола в секунду
+
+finish_autorepeat_handler:
+    ; Извлечь из стека значения всех 16-битных регистров общего назначения
     POPA
+    ; Извлечение регистра флагов из стека
+    POPF
 
-    MOV AH, 49H
-    INT 21H
+    JMP CS:CURR_HANDLER ; возвращение к обработчику, запомненному в ините
 
-    MOV AX, 4C00H
-    INT 21H
+autorepeat_handler endp
 
-END MAIN
+end main
