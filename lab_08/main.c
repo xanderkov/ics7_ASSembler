@@ -8,7 +8,7 @@ int my_strlen(const char *str)
     // причем расширенный AT&T, отсюда по 2 %
     // /n/t нужно для выравнивания, чтобы дизассемблированный код выглядел красиво
     asm
-    (
+    (   
         "movl %%edi, %%ebx\n\t"
         "inc %%ebx\n\t"
         "xor %%al, %%al\n\t"
@@ -29,8 +29,8 @@ int my_strlen(const char *str)
 int main()
 {
     int len;
-    char before[32], *middle = before + 3, *after = middle + 3;
-    char messg[] = "BMSTU MDPL LAB 8";
+    char before[32] = {'0'}, *middle = before + 2, *after = middle + 2;
+    char messg[] = "Test strlen and strcpy";
 
     len = my_strlen(messg);
     printf("String lenght = %d\n", len);
@@ -40,10 +40,10 @@ int main()
     printf("Coppied string: %s\n", middle);
 
     my_strcpy(before, middle, len);
-    printf("Span before: %s\n", before);
+    //printf("Copy before pointer: %s\n", before);
 
     my_strcpy(after, before, len);
-    printf("Span after: %s\n", after);
+    printf("Copy after pointer: %s\n", after);
 
     my_strcpy(after, after, len);
     printf("Identic strings: %s\n", after);
