@@ -8,7 +8,7 @@ int my_strlen(const char *str)
     // причем расширенный AT&T, отсюда по 2 %
     // /n/t нужно для выравнивания, чтобы дизассемблированный код выглядел красиво
     asm
-    (   
+    (
         "movl %%edi, %%ebx\n\t"
         "inc %%ebx\n\t"
         "xor %%al, %%al\n\t"
@@ -33,9 +33,9 @@ int main()
     char messg[] = "Test strlen and strcpy";
 
     len = my_strlen(messg);
-    printf("String lenght = %d\n", len);
+    printf("String length = %d\n", len);
     
-    //         rdi    rsi    edx
+    //         rdi    rsi    rdx
     my_strcpy(middle, messg, len);
     printf("Coppied string: %s\n", middle);
 
