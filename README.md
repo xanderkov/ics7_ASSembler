@@ -11,3 +11,4 @@
 9. Лабораторная 9 (lab_09) :heavy_check_mark:
 10. Лабораторная 10 (lab_10) :heavy_check_mark:
 11. Лабораторная 11 (lab_11) :heavy_check_mark:
+12. Лабораторная 12 (lab_12) :heavy_check_mark:
